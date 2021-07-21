@@ -1,0 +1,296 @@
+---
+title: "Evolutionary rescue in marine Vibrio"
+author: "Jay T. Lennon"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+header-includes:
+   - \usepackage{array}
+output: pdf_document
+geometry: margin=2.54cm
+---
+
+Clear workspace and set directory
+```{r}
+rm(list=ls())
+getwd()
+setwd("~/Github/VibrioRescue")
+```
+
+Load data, packages, and functions
+```{r}
+#saved file as csv with UTF-8 encoding
+# May need to use install.packages() if it's the first time you've used packages
+gc <- read.csv(file = "~/Github/VibrioRescue/data/VibrioRescue_part1.csv")
+require("png")
+require("grid")
+require("dplyr")
+sem <- function(x) sqrt(var(x)/length(x))
+```
+
+Convert time to decimal hours
+```{r}
+time <- sapply(strsplit(gc[,1],":"),
+  function(x) {
+    x <- as.numeric(x)
+    x[1]+x[2]/60
+    }
+)
+```
+
+Calculate means and SEM
+```{r}
+gc.2 <- data.frame(time, gc[,2:97])
+gc.t <- tibble(gc.2)
+gc.t <- rowwise(gc.t)
+
+# Vibrio-only control
+v.0 <- gc.t %>% mutate(avg = mean(c_across(starts_with("A"))), 
+                        sem = sem(c_across(starts_with("A"))))
+v.0 <- as.data.frame(v.0[, c("avg","sem")])
+
+#  10^0 dilution
+p.0 <- gc.t %>% mutate(avg = mean(c_across(starts_with("B"))), 
+                        sem = sem(c_across(starts_with("B"))))
+p.0 <- as.data.frame(p.0[, c("avg","sem")])
+
+#  10^-1 dilution
+p.1 <- gc.t %>% mutate(avg = mean(c_across(starts_with("C"))), 
+                        sem = sem(c_across(starts_with("C"))))
+p.1 <- as.data.frame(p.1[, c("avg","sem")])
+
+#  10^-2 dilution
+p.2 <- gc.t %>% mutate(avg = mean(c_across(starts_with("D"))), 
+                        sem = sem(c_across(starts_with("D"))))
+p.2 <- as.data.frame(p.2[, c("avg","sem")])
+
+#  10^-3 dilution
+p.3 <- gc.t %>% mutate(avg = mean(c_across(starts_with("E"))), 
+                        sem = sem(c_across(starts_with("E"))))
+p.3 <- as.data.frame(p.3[, c("avg","sem")])
+
+#  10^-4 dilution
+p.4 <- gc.t %>% mutate(avg = mean(c_across(starts_with("F"))), 
+                        sem = sem(c_across(starts_with("f"))))
+p.4 <- as.data.frame(p.4[, c("avg","sem")])
+
+#  10^-5 dilution
+p.5 <- gc.t %>% mutate(avg = mean(c_across(starts_with("G"))), 
+                        sem = sem(c_across(starts_with("G"))))
+p.5 <- as.data.frame(p.5[, c("avg","sem")])
+
+#  No-cell control
+c.0 <- gc.t %>% mutate(avg = mean(c_across(starts_with("H"))), 
+                        sem = sem(c_across(starts_with("H"))))
+c.0 <- as.data.frame(c.0[, c("avg","sem")])
+```
+
+# Plot data time series
+```{r}
+png(filename="~/Desktop/MBL/figures/VibrioRescue_part1.png",
+    width = 1200, height = 1200, res = 96*2)
+
+# initiate plot with no-phage control
+plot.new()
+par(mar = c(7, 7, 5, 7))
+plot(time, v.0$avg, xlim = c(-1.5, 21), 
+     ylim = c(0.7, 1.75), type = "l", 
+     col = "black", cex = 2, ylab = "", xlab = "", 
+     cex.lab = 1.5, las = 1, lwd = 2, yaxt = "n", xaxt = "n")
+box(lwd = 2)
+
+arrows(x0 = time, y0 = v.0$avg, 
+       y1 = v.0$avg + v.0$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "black")
+
+arrows(x0 = time, y0 = v.0$avg, 
+       y1 = v.0$avg - v.0$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "grey")
+
+# plot 10^0 phage dilution
+lines(time, p.0$avg, col = "red", lwd = 2)
+
+arrows(x0 = time, y0 = p.0$avg, 
+       y1 = p.0$avg + p.0$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "red")
+
+arrows(x0 = time, y0 = p.0$avg, 
+       y1 = p.0$avg - p.0$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "red")
+
+# plot 10^-1 phage dilution
+lines(time, p.1$avg, col = "orange", lwd = 2)
+
+arrows(x0 = time, y0 = p.1$avg, 
+       y1 = p.1$avg + p.1$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "orange")
+
+arrows(x0 = time, y0 = p.1$avg, 
+       y1 = p.1$avg - p.1$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "orange")
+
+# plot 10^-2 phage dilution
+lines(time, p.3$avg, col = "yellow", lwd = 2)
+
+arrows(x0 = time, y0 = p.3$avg, 
+       y1 = p.3$avg + p.3$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "yellow")
+
+arrows(x0 = time, y0 = p.3$avg, 
+       y1 = p.3$avg - p.3$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "yellow")
+
+# plot 10^-3 phage dilution
+lines(time, p.4$avg, col = "green", lwd = 2)
+
+arrows(x0 = time, y0 = p.4$avg, 
+       y1 = p.4$avg + p.4$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "green")
+
+arrows(x0 = time, y0 = p.4$avg, 
+       y1 = p.4$avg - p.4$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "green")
+
+
+# plot 10^-4 phage dilution
+lines(time, p.5$avg, col = "blue", lwd = 2)
+
+arrows(x0 = time, y0 = p.5$avg, 
+       y1 = p.5$avg + p.5$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "blue")
+
+arrows(x0 = time, y0 = p.5$avg, 
+       y1 = p.5$avg - p.5$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "blue")
+
+# Axis labels
+mtext('Host abundance (OD 600)', side = 2, outer = TRUE, cex = 2, 
+      line = -3, adj = 0.55)
+
+mtext('Time (hr)', side = 1, outer = TRUE, 
+      cex = 2, line = -3, adj = 0.5)
+
+axis(side = 1, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    labels = c("0", "5", "10", "15", "20"), at = c(0, 5, 10, 15, 20))
+
+axis(side = 3, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    at = c(0, 5, 10, 15, 20), labels = F)
+
+axis(side = 2, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    labels = c("0.75", "1.0","1.25", "1.5", "1.75"), at = c(0.75, 1.0, 1.25, 1.5, 1.75))
+
+axis(side = 4, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    at = c(0.75, 1.0, 1.25, 1.5, 1.75), labels = F)
+
+# Close Plot Device
+dev.off()
+graphics.off()
+
+# Show Plot
+img <- readPNG("~/Desktop/MBL/figures/VibrioRescue_part1.png")
+
+grid.raster(img)
+```
+
+# Final biomass-MOI relationship
+```{r}
+gc.3 <- gc.2[213,]
+gc.t3 <- tibble(gc.3)
+gc.t3 <- rowwise(gc.t3)
+
+# Vibrio-only control
+v.0 <- gc.t3 %>% mutate(avg = mean(c_across(starts_with("A"))), 
+                        sem = sem(c_across(starts_with("A"))))
+v.0 <- as.data.frame(v.0[, c("avg","sem")])
+
+#  10^0 dilution
+p.0 <- gc.t3 %>% mutate(avg = mean(c_across(starts_with("B"))), 
+                        sem = sem(c_across(starts_with("B"))))
+p.0 <- as.data.frame(p.0[, c("avg","sem")])
+
+#  10^-1 dilution
+p.1 <- gc.t3 %>% mutate(avg = mean(c_across(starts_with("C"))), 
+                        sem = sem(c_across(starts_with("C"))))
+p.1 <- as.data.frame(p.1[, c("avg","sem")])
+
+#  10^-2 dilution
+p.2 <- gc.t3 %>% mutate(avg = mean(c_across(starts_with("D"))), 
+                        sem = sem(c_across(starts_with("D"))))
+p.2 <- as.data.frame(p.2[, c("avg","sem")])
+
+#  10^-3 dilution
+p.3 <- gc.t3 %>% mutate(avg = mean(c_across(starts_with("E"))), 
+                        sem = sem(c_across(starts_with("E"))))
+p.3 <- as.data.frame(p.3[, c("avg","sem")])
+
+#  10^-4 dilution
+p.4 <- gc.t3 %>% mutate(avg = mean(c_across(starts_with("F"))), 
+                        sem = sem(c_across(starts_with("f"))))
+p.4 <- as.data.frame(p.4[, c("avg","sem")])
+
+#  10^-5 dilution
+p.5 <- gc.t3 %>% mutate(avg = mean(c_across(starts_with("G"))), 
+                        sem = sem(c_across(starts_with("G"))))
+p.5 <- as.data.frame(p.5[, c("avg","sem")])
+
+#  No-cell control
+c.0 <- gc.t3 %>% mutate(avg = mean(c_across(starts_with("H"))), 
+                        sem = sem(c_across(starts_with("H"))))
+c.0 <- as.data.frame(c.0[, c("avg","sem")])
+```
+
+# Plot final abundance as function of MOI
+
+```{r}
+
+png(filename="~/Desktop/MBL/figures/VibrioRescue_Tf.png",
+    width = 1200, height = 1200, res = 96*2)
+
+Nf.mean <- as.data.frame(c(p.0[1], p.1[1], p.2[1], p.2[1], p.4[1], p.5[1]))
+Nf.mean <- data.frame(p.0[1], p.1[1], p.2[1], p.2[1], p.4[1], p.5[1])
+Nf.sem <- c(p.0[2], p.1[2], p.2[2], p.2[2], p.4[2], p.5[2])
+moi <- c(0, 1, 2, 3, 4, 5)
+
+Nf <-data.frame(moi, t(Nf.mean))
+
+#plot(Nf.mean, moi)
+plot.new()
+par(mar = c(7, 7, 5, 7))
+plot(moi, Nf.mean, xlim = c(-1, 6), 
+     ylim = c(0.7, 1.5), type = "p", 
+     col = "black", cex = 2, ylab = "", xlab = "", 
+     cex.lab = 1.5, las = 1, lwd = 2, yaxt = "n", xaxt = "n")
+box(lwd = 2)
+
+mtext('Host abundance (OD 600)', side = 2, outer = TRUE, cex = 2, 
+      line = -3, adj = 0.55)
+
+mtext('log(MOI)', side = 1, outer = TRUE, 
+      cex = 2, line = -3, adj = 0.5)
+
+axis(side = 1, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    labels = c("0", "1", "2", "3", "4", "5"), at = c(0, 1, 2, 3, 4, 5))
+
+axis(side = 3, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    at = c(0, 1, 2, 3, 4, 5), labels = F)
+
+axis(side = 2, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    labels = c("0.75", "1.0", "1.25", "1.5"), at = c(0.75, 1.0, 1.25, 1.5))
+
+axis(side = 4, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    at = c(0.75, 1.0, 1.25, 1.5), labels = F)
+
+# regression
+fit <- lm(Nf$t.Nf.mean ~ Nf$moi, data = Nf)
+summary(fit)
+abline(fit, col = "red", lwd = 3, lty = 3)
+
+# Close Plot Device
+dev.off()
+graphics.off()
+
+# Show Plot
+img <- readPNG("~/Desktop/MBL/figures/VibrioRescue_Tf.png")
+
+grid.raster(img)
+```
+
+
