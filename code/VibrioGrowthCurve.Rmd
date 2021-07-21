@@ -1,0 +1,195 @@
+---
+title: "Growth curves"
+author: "Jay T. Lennon"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+header-includes:
+   - \usepackage{array}
+output: pdf_document
+geometry: margin=2.54cm
+---
+
+# Clear workspace and set directory
+```{r}
+rm(list=ls())
+getwd()
+setwd("~/Github/VibrioRescue")
+```
+
+# Load data, packages, and functions
+```{r}
+#saved file as csv with UTF-8 encoding
+# May need to use install.packages() if it's the first time you've used packages
+gc <- read.csv(file = "~/Github/VibrioRescue/data/Vibrio_George.csv")
+require("png")
+require("grid")
+require("dplyr")
+sem <- function(x) sqrt(var(x)/length(x))
+```
+
+# Convert time to decimal hours
+```{r}
+time <- sapply(strsplit(gc[,1],":"),
+  function(x) {
+    x <- as.numeric(x)
+    x[1]+x[2]/60
+    }
+)
+```
+
+# Calculate means and SEM
+```{r}
+# In this section, I'm defining treatments, which happen to be organized by column
+# You will need to modify for your experiment and treamtnets 
+gc.2 <- data.frame(time, gc[,2:73])
+gc.t <- tibble(gc.2)
+gc.t <- rowwise(gc.t)
+
+# Vibrio-only control
+v.0 <- gc.t %>% mutate(avg = mean(c_across(starts_with("A"))), 
+                        sem = sem(c_across(starts_with("A"))))
+v.0 <- as.data.frame(v.0[, c("avg","sem")])
+
+#  10^0 dilution
+p.0 <- gc.t %>% mutate(avg = mean(c_across(starts_with("B"))), 
+                        sem = sem(c_across(starts_with("B"))))
+p.0 <- as.data.frame(p.0[, c("avg","sem")])
+
+#  10^-1 dilution
+p.1 <- gc.t %>% mutate(avg = mean(c_across(starts_with("C"))), 
+                        sem = sem(c_across(starts_with("C"))))
+p.1 <- as.data.frame(p.1[, c("avg","sem")])
+
+#  10^-2 dilution
+p.2 <- gc.t %>% mutate(avg = mean(c_across(starts_with("D"))), 
+                        sem = sem(c_across(starts_with("D"))))
+p.2 <- as.data.frame(p.2[, c("avg","sem")])
+
+#  10^-3 dilution
+p.3 <- gc.t %>% mutate(avg = mean(c_across(starts_with("E"))), 
+                        sem = sem(c_across(starts_with("E"))))
+p.3 <- as.data.frame(p.3[, c("avg","sem")])
+
+#  10^-4 dilution
+p.4 <- gc.t %>% mutate(avg = mean(c_across(starts_with("F"))), 
+                        sem = sem(c_across(starts_with("f"))))
+p.4 <- as.data.frame(p.4[, c("avg","sem")])
+
+#  10^-5 dilution
+p.5 <- gc.t %>% mutate(avg = mean(c_across(starts_with("G"))), 
+                        sem = sem(c_across(starts_with("G"))))
+p.5 <- as.data.frame(p.5[, c("avg","sem")])
+
+#  No-cell control
+c.0 <- gc.t %>% mutate(avg = mean(c_across(starts_with("H"))), 
+                        sem = sem(c_across(starts_with("H"))))
+c.0 <- as.data.frame(c.0[, c("avg","sem")])
+```
+
+# Plot data
+```{r}
+png(filename="~/Github/VibrioRescue/figures/george.png",
+    width = 1200, height = 1200, res = 96*2)
+
+# initiate plot with no-phage control
+plot.new()
+par(mar = c(7, 7, 5, 7))
+plot(time, v.0$avg, xlim = c(-1.5, 15), 
+     ylim = c(0.1, 0.85), type = "l", 
+     col = "blue", cex = 2, ylab = "", xlab = "", 
+     cex.lab = 1.5, las = 1, lwd = 2, yaxt = "n", xaxt = "n")
+box(lwd = 2)
+
+arrows(x0 = time, y0 = v.0$avg, 
+       y1 = v.0$avg + v.0$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "blue")
+
+arrows(x0 = time, y0 = v.0$avg, 
+       y1 = v.0$avg - v.0$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "blue")
+
+# plot 10^0 phage dilution
+lines(time, p.0$avg, col = "deepskyblue", lwd = 2)
+
+arrows(x0 = time, y0 = p.0$avg, 
+       y1 = p.0$avg + p.0$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "deepskyblue")
+
+arrows(x0 = time, y0 = p.0$avg, 
+       y1 = p.0$avg - p.0$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "deepskyblue")
+
+# plot 10^-1 phage dilution
+lines(time, p.1$avg, col = "darkslategray1", lwd = 2)
+
+arrows(x0 = time, y0 = p.1$avg, 
+       y1 = p.1$avg + p.1$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "darkslategray1")
+
+arrows(x0 = time, y0 = p.1$avg, 
+       y1 = p.1$avg - p.1$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "darkslategray1")
+
+# plot 10^-3 phage dilution
+lines(time, p.3$avg, col = "red", lwd = 2)
+
+arrows(x0 = time, y0 = p.3$avg, 
+       y1 = p.3$avg + p.3$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "red")
+
+arrows(x0 = time, y0 = p.3$avg, 
+       y1 = p.3$avg - p.3$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "red")
+
+# plot 10^-4 phage dilution
+lines(time, p.4$avg, col = "deeppink", lwd = 2)
+
+arrows(x0 = time, y0 = p.4$avg, 
+       y1 = p.4$avg + p.4$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "deeppink")
+
+arrows(x0 = time, y0 = p.4$avg, 
+       y1 = p.4$avg - p.4$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "deeppink")
+
+
+# plot 10^-5 phage dilution
+lines(time, p.5$avg, col = "orangered", lwd = 2)
+
+arrows(x0 = time, y0 = p.5$avg, 
+       y1 = p.5$avg + p.5$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "orangered")
+
+arrows(x0 = time, y0 = p.5$avg, 
+       y1 = p.5$avg - p.5$sem, 
+       angle = 90, length = 0, lwd = 0.5, col = "orangered")
+
+# Axis labels
+mtext('OD 600', side = 2, outer = TRUE, cex = 2, 
+      line = -3, adj = 0.55)
+
+mtext('Time (hr)', side = 1, outer = TRUE, 
+      cex = 2, line = -3, adj = 0.5)
+
+axis(side = 1, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    labels = c("0", "5", "10", "15"), at = c(0, 5, 10, 15))
+
+axis(side = 3, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    at = c(0, 5, 10, 15), labels = F)
+
+axis(side = 2, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    labels = c("0", "0.2","0.4", "0.6", "0.8"), at = c(0, 0.2, 0.4, 0.6, 0.8))
+
+axis(side = 4, lwd.ticks = 2, cex.axis = 1.5, las = 1,
+    at = c(0, 0.2, 0.4, 0.6, 0.8), labels = F)
+
+# Close Plot Device
+dev.off()
+graphics.off()
+
+# Show Plot
+img <- readPNG("~/Github/VibrioRescue/figures/george.png")
+
+grid.raster(img)
+```
+
+
